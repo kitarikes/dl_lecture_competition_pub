@@ -1,6 +1,10 @@
 FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu18.04
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.3/compat
+
+COPY requirements.txt /tmp/requirements.txt
+
 RUN apt update
 RUN apt upgrade -y
 
@@ -27,9 +31,26 @@ RUN apt install -y --no-install-recommends \
         libreadline-dev \
         libffi-dev \
         libsqlite3-dev \
-        libglib2.0-0
+        libglib2.0-0 \
+        && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+        && sh Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda \
+        && rm Miniconda3-latest-Linux-x86_64.sh \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+
+# Set the environment path to include the Conda bin directory
+ENV PATH="/opt/miniconda/bin:$PATH"
 
 WORKDIR /workspace
 
 COPY ./requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+
+# Install Python packages and setup Conda environment in a single RUN command
+RUN conda create -y -n vqa-env python=3.8 \
+    && echo "conda activate vqa-env" >> ~/.bashrc \
+    && echo "conda activate vqa-env" > /etc/profile.d/conda.sh \
+    && . /opt/miniconda/etc/profile.d/conda.sh \
+    && conda activate vqa-env \
+    && ls -a \
+    && pip install -r /tmp/requirements.txt
+
