@@ -1,7 +1,7 @@
 FROM nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.0/compat:/opt/miniconda/envs/vqa-env/lib/python3.8/site-packages/nvidia/nvjitlink/lib
+RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.0/compat:/opt/miniconda/envs/vqa-env/lib/python3.8/site-packages/nvidia/nvjitlink/lib
 
 COPY requirements.txt /tmp/requirements.txt
 
