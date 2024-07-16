@@ -24,7 +24,6 @@ RUN apt install -y --no-install-recommends \
         libgl1-mesa-dev \
         libjpeg-dev \
         zlib1g-dev \
-        python3-dev \
         libncurses5-dev \
         libgdbm-dev \
         libnss3-dev \
