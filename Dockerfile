@@ -18,6 +18,7 @@ RUN apt install -y --no-install-recommends \
         git \
         tzdata \
         libgl1-mesa-dev \
+        libjpeg-dev \
         zlib1g-dev \
         libncurses5-dev \
         libgdbm-dev \
