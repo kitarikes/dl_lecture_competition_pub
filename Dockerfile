@@ -1,8 +1,6 @@
 FROM nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.0/compat:/opt/miniconda/envs/vqa-env/lib/python3.8/site-packages/nvidia/nvjitlink/lib
-
 COPY requirements.txt /tmp/requirements.txt
 
 RUN apt update
@@ -52,6 +50,9 @@ RUN conda create -y -n vqa-env python=3.8 \
     && conda activate vqa-env \
     && ls -a \
     && pip install -r /tmp/requirements.txt
+
+RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.0/compat:/opt/miniconda/envs/vqa-env/lib/python3.8/site-packages/nvidia/nvjitlink/lib
+
 
 # Set the default command for the container
 CMD ["/bin/bash"]
