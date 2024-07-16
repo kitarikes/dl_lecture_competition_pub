@@ -53,3 +53,6 @@ RUN conda create -y -n vqa-env python=3.8 \
     && ls -a \
     && pip install -r /tmp/requirements.txt
 
+# Set the default command for the container
+CMD ["/bin/bash"]
+CMD ["tail", "-f", "/dev/null"]
