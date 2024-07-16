@@ -129,6 +129,7 @@ class VQADataset(torch.utils.data.Dataset):
             10人の回答者の回答の中で最頻値の回答のid
         """
         image = Image.open(f"{self.image_dir}/{self.df['image'][idx]}")
+        print(f"DONE: {self.image_dir}/{self.df['image'][idx]}")
         image = self.transform(image)
         question = np.zeros(len(self.idx2question) + 1)  # 未知語用の要素を追加
         question_words = self.df["question"][idx].split(" ")
@@ -362,6 +363,7 @@ def main():
     # deviceの設定
     set_seed(42)
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(device)
 
     # dataloader / model
     transform = transforms.Compose([
