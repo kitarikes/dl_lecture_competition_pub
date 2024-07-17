@@ -45,26 +45,16 @@ def process_text(text):
     return text
 
 class VQADataset(torch.utils.data.Dataset):
-    def __init__(self, df_path, image_dir, transform=None, answer=True):
+    def __init__(self, df_path, image_dir, transform=None, answer=True, tokenizer=None):
         self.transform = transform  # 画像の前処理
         self.image_dir = image_dir  # 画像ファイルのディレクトリ
         self.df = pandas.read_json(df_path)  # 画像ファイルのパス，question, answerを持つDataFrame
         self.answer = answer
+        self.tokenizer = tokenizer
 
-        # question / answerの辞書を作成
-        self.question2idx = {}
+        # answer辞書の作成
         self.answer2idx = {}
-        self.idx2question = {}
         self.idx2answer = {}
-
-        # 質問文に含まれる単語を辞書に追加
-        for question in self.df["question"]:
-            question = process_text(question)
-            words = question.split(" ")
-            for word in words:
-                if word not in self.question2idx:
-                    self.question2idx[word] = len(self.question2idx)
-        self.idx2question = {v: k for k, v in self.question2idx.items()}  # 逆変換用の辞書(question)
 
         if self.answer:
             # 回答に含まれる単語を辞書に追加
@@ -76,59 +66,19 @@ class VQADataset(torch.utils.data.Dataset):
                         self.answer2idx[word] = len(self.answer2idx)
             self.idx2answer = {v: k for k, v in self.answer2idx.items()}  # 逆変換用の辞書(answer)
 
-    def update_dict(self, dataset):
-        """
-        検証用データ，テストデータの辞書を訓練データの辞書に更新する．
-
-        Parameters
-        ----------
-        dataset : Dataset
-            訓練データのDataset
-        """
-        self.question2idx = dataset.question2idx
-        self.answer2idx = dataset.answer2idx
-        self.idx2question = dataset.idx2question
-        self.idx2answer = dataset.idx2answer
-
     def __getitem__(self, idx):
-        """
-        対応するidxのデータ（画像，質問，回答）を取得．
-
-        Parameters
-        ----------
-        idx : int
-            取得するデータのインデックス
-
-        Returns
-        -------
-        image : torch.Tensor  (C, H, W)
-            画像データ
-        question : torch.Tensor  (vocab_size)
-            質問文をone-hot表現に変換したもの
-        answers : torch.Tensor  (n_answer)
-            10人の回答者の回答のid
-        mode_answer_idx : torch.Tensor  (1)
-            10人の回答者の回答の中で最頻値の回答のid
-        """
         image = Image.open(f"{self.image_dir}/{self.df['image'][idx]}")
-        print(f"DONE: {self.image_dir}/{self.df['image'][idx]}")
         image = self.transform(image)
-        question = np.zeros(len(self.idx2question) + 1)  # 未知語用の要素を追加
-        question_words = self.df["question"][idx].split(" ")
-        for word in question_words:
-            try:
-                question[self.question2idx[word]] = 1  # one-hot表現に変換
-            except KeyError:
-                question[-1] = 1  # 未知語
-
+        
+        question = self.df["question"][idx]
+        
         if self.answer:
             answers = [self.answer2idx[process_text(answer["answer"])] for answer in self.df["answers"][idx]]
             mode_answer_idx = mode(answers)  # 最頻値を取得（正解ラベル）
 
-            return image, torch.Tensor(question), torch.Tensor(answers), int(mode_answer_idx)
-
+            return image, question, torch.Tensor(answers), int(mode_answer_idx)
         else:
-            return image, torch.Tensor(question)
+            return image, question
 
     def __len__(self):
         return len(self.df)
