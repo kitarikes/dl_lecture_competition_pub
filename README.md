@@ -8,6 +8,7 @@
   - 画像データのdata-augmentation
   - earlystoppingの実装
   - ローカルGPUを用いるためにバージョンを考慮したライブラリインストール
+     - `pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113`
 
 ## 環境構築
 ### Conda
