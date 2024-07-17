@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from transformers import AutoModel, AutoTokenizer
 
 
 class BasicBlock(nn.Module):
@@ -117,20 +118,36 @@ def ResNet50():
 
 
 class VQAModel(nn.Module):
-    def __init__(self, vocab_size: int, n_answer: int):
+    def __init__(self, n_answer: int, pretrained_model_name: str = "bert-base-uncased"):
         super().__init__()
-        self.resnet = ResNet18()
-        self.text_encoder = nn.Linear(vocab_size, 512)
-
+        self.resnet = ResNet50()
+        
+        # Load pre-trained transformer model and tokenizer
+        self.text_encoder = AutoModel.from_pretrained(pretrained_model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name)
+        
+        # Freeze the transformer parameters (optional)
+        for param in self.text_encoder.parameters():
+            param.requires_grad = False
+        
+        # Adjust the size of the linear layer based on the transformer's output size
+        transformer_output_size = self.text_encoder.config.hidden_size
+        
         self.fc = nn.Sequential(
-            nn.Linear(1024, 512),
+            nn.Linear(512 + transformer_output_size, 512),
             nn.ReLU(inplace=True),
             nn.Linear(512, n_answer)
         )
 
     def forward(self, image, question):
         image_feature = self.resnet(image)  # 画像の特徴量
-        question_feature = self.text_encoder(question)  # テキストの特徴量
+        
+        # Tokenize and encode the question
+        inputs = self.tokenizer(question, return_tensors="pt", padding=True, truncation=True, max_length=512)
+        inputs = {k: v.to(image.device) for k, v in inputs.items()}  # Move inputs to the same device as the image
+        
+        # Get the transformer's output
+        question_feature = self.text_encoder(**inputs).last_hidden_state[:, 0, :]  # Using [CLS] token output
 
         x = torch.cat([image_feature, question_feature], dim=1)
         x = self.fc(x)
