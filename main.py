@@ -11,6 +11,7 @@ from src_v2.datasets import VQADataset
 from src_v2.excute import train, eval
 from src_v2.models import VQAModel
 
+
 def main():
     # deviceの設定
     set_seed(42)

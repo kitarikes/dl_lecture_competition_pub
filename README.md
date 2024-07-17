@@ -1,17 +1,20 @@
 # DL基礎講座2024　最終課題「Visual Question Answering（VQA）」
 
+## 追加実装
+
+- `src_v2`内で実装
+  - transformerを使ったテキストエンコーダー
+  - class_map.csvを使った正解レベルの拡充
+  - 画像データのdata-augmentation
+  - earlystoppingの実装
+  - ローカルGPUを用いるためにバージョンを考慮したライブラリインストール
 
 ## 環境構築
 ### Conda
 ```bash
 conda create -n dl_competition python=3.10
 pip install -r requirements.txt
-```
-### Docker
-- Dockerイメージのcudaバージョンについては，ご自身が利用するGPUに合わせて変更してください．
-```bash
-docker build -t <イメージ名> .
-docker run -it -v $PWD:/workspace -w /workspace <イメージ名> bash
+pip install transformers python-Levenshtein # 追加
 ```
 
 ## ベースラインモデルを動かす
