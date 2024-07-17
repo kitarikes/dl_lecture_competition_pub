@@ -4,7 +4,10 @@ import numpy as np
 from .models import VQA_criterion
 
 
-# 4. 学習の実装
+import torch
+import time
+
+
 def train(model, dataloader, optimizer, criterion, device):
     model.train()
 
@@ -15,10 +18,9 @@ def train(model, dataloader, optimizer, criterion, device):
     start = time.time()
     for image, question, answers, mode_answer in dataloader:
         image, answers, mode_answer = image.to(device), answers.to(device), mode_answer.to(device)
-        # question is now a list of strings, no need to move to device
 
         pred = model(image, question)
-        loss = criterion(pred, mode_answer.squeeze())
+        loss = criterion(pred, mode_answer)
 
         optimizer.zero_grad()
         loss.backward()
@@ -41,13 +43,12 @@ def eval(model, dataloader, criterion, device):
     with torch.no_grad():
         for image, question, answers, mode_answer in dataloader:
             image, answers, mode_answer = image.to(device), answers.to(device), mode_answer.to(device)
-            # question is now a list of strings, no need to move to device
 
             pred = model(image, question)
-            loss = criterion(pred, mode_answer.squeeze())
+            loss = criterion(pred, mode_answer)
 
             total_loss += loss.item()
             total_acc += VQA_criterion(pred.argmax(1), answers)  # VQA accuracy
-            simple_acc += (pred.argmax(1) == mode_answer).mean().item()  # simple accuracy
+            simple_acc += (pred.argmax(1) == mode_answer).float().mean().item()  # simple accuracy
 
     return total_loss / len(dataloader), total_acc / len(dataloader), simple_acc / len(dataloader), time.time() - start
